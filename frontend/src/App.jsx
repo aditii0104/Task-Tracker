@@ -1,11 +1,33 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ProfileMenu from "./components/ProfileMenu";
+import ProfileButton from "./components/ProfileButton";
+import { useAuth } from "./context/AuthContext";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import FilterBar from "./components/FilterBar";
 import Toast from "./components/Toast";
+import Login from "./Login";
+import Register from "./Register";
 import * as taskApi from "./api/taskApi";
 
 function App() {
+  const { user, loading, logout } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
+
+  if (loading) return <div>Loading...</div>;
+
+  if (!user) {
+    return showRegister ? (
+      <Register onSwitchToLogin={() => setShowRegister(false)} />
+    ) : (
+      <Login onSwitchToRegister={() => setShowRegister(true)} />
+    );
+  }
+
+  return <TaskDashboard onLogout={logout} />;
+}
+
+function TaskDashboard({ onLogout }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState(null);
@@ -22,8 +44,8 @@ function App() {
   const pushToast = useCallback((message, type = "success") => {
     const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3000);
   }, []);
 
@@ -36,53 +58,52 @@ function App() {
       if (filters.sortBy) params.sortBy = filters.sortBy;
       if (filters.search) params.search = filters.search;
 
-      const res = await taskApi.fetchTasks(params);
-      setTasks(res.data);
-    } catch (err) {
-      pushToast(
-        err.response?.data?.message || "Could not reach the server. Is the backend running?",
-        "error"
-      );
+      const response = await taskApi.fetchTasks(params);
+      setTasks(response.data);
+    } catch (error) {
+      pushToast(error.response?.data?.message || "Could not reach the server. Is the backend running?", "error");
     } finally {
       setLoading(false);
     }
   }, [filters, pushToast]);
 
   useEffect(() => {
-    const debounce = setTimeout(loadTasks, filters.search ? 300 : 0);
-    return () => clearTimeout(debounce);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+    const delay = filters.search ? 300 : 0;
+    const timer = window.setTimeout(() => {
+      loadTasks();
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [filters, loadTasks]);
 
   const handleCreateOrUpdate = async (formData) => {
     try {
       if (editingTask) {
-        const res = await taskApi.updateTask(editingTask._id, formData);
-        setTasks((prev) => prev.map((t) => (t._id === res.data._id ? res.data : t)));
-        pushToast("Task updated");
+        const response = await taskApi.updateTask(editingTask._id, formData);
+        setTasks((prev) => prev.map((task) => (task._id === response.data._id ? response.data : task)));
         setEditingTask(null);
+        pushToast("Task updated");
       } else {
-        const res = await taskApi.createTask(formData);
-        setTasks((prev) => [res.data, ...prev]);
+        const response = await taskApi.createTask(formData);
+        setTasks((prev) => [response.data, ...prev]);
         pushToast("Task added");
       }
-    } catch (err) {
-      pushToast(err.response?.data?.message || "Something went wrong while saving", "error");
-      throw err;
+    } catch (error) {
+      pushToast(error.response?.data?.message || "Something went wrong while saving", "error");
+      throw error;
     }
   };
 
   const handleToggleComplete = async (task) => {
     const nextStatus = task.status === "completed" ? "pending" : "completed";
-    // Optimistic update for instant feedback
-    setTasks((prev) => prev.map((t) => (t._id === task._id ? { ...t, status: nextStatus } : t)));
+    setTasks((prev) => prev.map((item) => (item._id === task._id ? { ...item, status: nextStatus } : item)));
+
     try {
-      const res = await taskApi.updateTask(task._id, { status: nextStatus });
-      setTasks((prev) => prev.map((t) => (t._id === res.data._id ? res.data : t)));
-    } catch (err) {
-      // Revert on failure
-      setTasks((prev) => prev.map((t) => (t._id === task._id ? task : t)));
-      pushToast(err.response?.data?.message || "Could not update task status", "error");
+      const response = await taskApi.updateTask(task._id, { status: nextStatus });
+      setTasks((prev) => prev.map((item) => (item._id === response.data._id ? response.data : item)));
+    } catch (error) {
+      setTasks((prev) => prev.map((item) => (item._id === task._id ? task : item)));
+      pushToast(error.response?.data?.message || "Could not update task status", "error");
     }
   };
 
@@ -95,44 +116,63 @@ function App() {
 
   const handleDelete = async (task) => {
     if (!window.confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
-    const prevTasks = tasks;
-    setTasks((prev) => prev.filter((t) => t._id !== task._id));
+
+    const previousTasks = tasks;
+    setTasks((prev) => prev.filter((item) => item._id !== task._id));
+
     try {
       await taskApi.deleteTask(task._id);
       pushToast("Task deleted");
-    } catch (err) {
-      setTasks(prevTasks);
-      pushToast(err.response?.data?.message || "Could not delete task", "error");
+    } catch (error) {
+      setTasks(previousTasks);
+      pushToast(error.response?.data?.message || "Could not delete task", "error");
     }
   };
 
-  const completedCount = tasks.filter((t) => t.status === "completed").length;
+  const completedCount = tasks.filter((task) => task.status === "completed").length;
 
   return (
     <div className="app-shell">
       <header className="console-header">
-        <div>
-          <h1 className="console-title">
-            Task<span>Ledger</span>
-          </h1>
-          <p className="console-sub">MERN task tracker · REST-backed · live sync</p>
+        <div className="header-left">
+          {/* Profile button is now in the left group */}
+          <ProfileButton />
+          
+          <div>
+            <h1 className="console-title">
+              Task<span>Ledger</span>
+            </h1>
+            <p className="console-sub">MERN task tracker · REST-backed · live sync</p>
+          </div>
         </div>
-        <div className="stat-stamp">
-          <b>{completedCount}</b> / {tasks.length} tasks closed
+        
+        <div className="header-right">
+          <div className="stat-stamp">
+            <b>{completedCount}</b> / {tasks.length} tasks closed
+          </div>
         </div>
       </header>
 
-      <TaskForm onSubmit={handleCreateOrUpdate} editingTask={editingTask} onCancelEdit={handleCancelEdit} />
+      {/* This panel will now be on the LEFT */}
+      <div className="task-form-panel">
+        <TaskForm 
+          onSubmit={handleCreateOrUpdate} 
+          editingTask={editingTask} 
+          onCancelEdit={handleCancelEdit} 
+        />
+      </div>
 
-      <FilterBar filters={filters} onChange={setFilters} />
-
-      <TaskList
-        tasks={tasks}
-        loading={loading}
-        onToggleComplete={handleToggleComplete}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {/* This list will now be on the RIGHT */}
+      <div className="task-list-panel">
+        <FilterBar filters={filters} onChange={setFilters} />
+        <TaskList
+          tasks={tasks}
+          loading={loading}
+          onToggleComplete={handleToggleComplete}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </div>
 
       <Toast toasts={toasts} />
     </div>

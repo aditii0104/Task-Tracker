@@ -7,6 +7,14 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Fetch tasks with optional filter/sort/search query params
 export const fetchTasks = async (params = {}) => {
   const response = await api.get("/tasks", { params });
