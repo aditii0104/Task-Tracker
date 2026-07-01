@@ -1,4 +1,5 @@
 require("dotenv").config();
+const authRoutes = require("./routes/authRoutes");
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
@@ -23,6 +24,8 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/tasks", taskRoutes);
+app.use("/api/auth", authRoutes);
 
 // Health check
 app.get("/", (req, res) => {

@@ -1,14 +1,12 @@
 const mongoose = require("mongoose");
 const Task = require("../models/Task");
 
-// @desc    Get all tasks (supports filtering & sorting via query params)
-// @route   GET /api/tasks
-// @access  Public
 const getTasks = async (req, res) => {
   try {
     const { status, priority, sortBy, order, search } = req.query;
-
-    const filter = {};
+    // Logic: Use req.user.id if authenticated, otherwise filter by existence
+    const filter = req.user ? { userId: req.user.id } : { userId: { $exists: false } };
+    
     if (status && status !== "all") filter.status = status;
     if (priority && priority !== "all") filter.priority = priority;
     if (search) {
@@ -24,107 +22,61 @@ const getTasks = async (req, res) => {
     const tasks = await Task.find(filter).sort(sort);
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error while fetching tasks", error: error.message });
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-// @desc    Get single task by ID
-// @route   GET /api/tasks/:id
-// @access  Public
 const getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid task ID" });
-    }
-
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ success: false, message: "Invalid ID" });
     const task = await Task.findById(id);
-    if (!task) {
-      return res.status(404).json({ success: false, message: "Task not found" });
-    }
-
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
     res.status(200).json({ success: true, data: task });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error while fetching task", error: error.message });
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-// @desc    Create a new task
-// @route   POST /api/tasks
-// @access  Public
 const createTask = async (req, res) => {
   try {
     const { title, description, status, priority, dueDate } = req.body;
-
-    const task = await Task.create({
+    const taskData = {
       title,
       description,
       status,
       priority,
       dueDate: dueDate || null,
-    });
-
+      userId: req.user ? req.user.id : undefined 
+    };
+    const task = await Task.create(taskData);
     res.status(201).json({ success: true, data: task });
   } catch (error) {
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ success: false, message: messages.join(", ") });
-    }
-    res.status(500).json({ success: false, message: "Server error while creating task", error: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Update an existing task
-// @route   PUT /api/tasks/:id
-// @access  Public
 const updateTask = async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid task ID" });
-    }
-
-    const task = await Task.findByIdAndUpdate(
-      id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
-
-    if (!task) {
-      return res.status(404).json({ success: false, message: "Task not found" });
-    }
-
+    const task = await Task.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
     res.status(200).json({ success: true, data: task });
   } catch (error) {
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ success: false, message: messages.join(", ") });
-    }
-    res.status(500).json({ success: false, message: "Server error while updating task", error: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Delete a task
-// @route   DELETE /api/tasks/:id
-// @access  Public
 const deleteTask = async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid task ID" });
-    }
-
-    const task = await Task.findByIdAndDelete(id);
-    if (!task) {
-      return res.status(404).json({ success: false, message: "Task not found" });
-    }
-
-    res.status(200).json({ success: true, data: {}, message: "Task deleted successfully" });
+    const task = await Task.findByIdAndDelete(req.params.id);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.status(200).json({ success: true, message: "Deleted" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error while deleting task", error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// EXPORTING ALL FUNCTIONS
 module.exports = {
   getTasks,
   getTaskById,
