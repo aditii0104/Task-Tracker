@@ -7,8 +7,10 @@ const {
   updateTask,
   deleteTask,
 } = require("../controllers/taskController");
+const { protect } = require("../middleware/authMiddleware"); // Import the middleware
 
-router.route("/").get(getTasks).post(createTask);
-router.route("/:id").get(getTaskById).put(updateTask).delete(deleteTask);
+// Routes
+router.route("/").get(getTasks).post(protect, createTask); // Protect creation
+router.route("/:id").get(getTaskById).put(protect, updateTask).delete(protect, deleteTask); // Protect update/delete
 
 module.exports = router;
