@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
+import API from '../api';
 
+const handleLogin = async (data) => {
+  // Notice we include /api/auth here
+  const response = await API.post('/api/auth/login', data);
+  // ...
+};
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Login = ({ onSuccess, onSwitchToRegister }) => {

@@ -1,13 +1,15 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://task-tracker-qzrd.onrender.com";
+// Always use the VITE_API_URL, fallback to localhost if needed for local dev
+const baseURL = import.meta.env.VITE_API_URL || "https://task-tracker-qzrd.onrender.com";
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
+const API = axios.create({
+  baseURL: `${baseURL}/api`, // Ensure /api prefix is here
+  withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
+// Use the same variable name (API) for the interceptor
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -15,30 +17,30 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Fetch tasks with optional filter/sort/search query params
+// Use API (uppercase) consistently in these functions
 export const fetchTasks = async (params = {}) => {
-  const response = await api.get("/tasks", { params });
+  const response = await API.get("/tasks", { params });
   return response.data;
 };
 
 export const fetchTaskById = async (id) => {
-  const response = await api.get(`/tasks/${id}`);
+  const response = await API.get(`/tasks/${id}`);
   return response.data;
 };
 
 export const createTask = async (taskData) => {
-  const response = await api.post("/tasks", taskData);
+  const response = await API.post("/tasks", taskData);
   return response.data;
 };
 
 export const updateTask = async (id, taskData) => {
-  const response = await api.put(`/tasks/${id}`, taskData);
+  const response = await API.put(`/tasks/${id}`, taskData);
   return response.data;
 };
 
 export const deleteTask = async (id) => {
-  const response = await api.delete(`/tasks/${id}`);
+  const response = await API.delete(`/tasks/${id}`);
   return response.data;
 };
 
-export default api;
+export default API;
