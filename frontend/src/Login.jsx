@@ -49,6 +49,13 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
 
   return (
     <div className="login-page-wrapper">
+      <div className="login-page-wrapper" style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh' 
+      }}>
       {/* Branding Header */}
       <div className="brand-header" style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1 className="brand-title" style={{ fontSize: '2.5rem', color: '#00d1b2' }}>
@@ -84,6 +91,7 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
         </button>
       </form>
     </div>
+  </div>
   );
 };
 
