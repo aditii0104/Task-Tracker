@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
-import api from "./api/taskApi";
 
-const handleLogin = async (data) => {
-  // Notice we include /api/auth here
-  const response = await api.post('/api/auth/login', data);
-  // ...
-};
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Login = ({ onSuccess, onSwitchToRegister }) => {
@@ -47,15 +41,15 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
       await login({ email: formData.email.trim(), password: formData.password });
       onSuccess?.();
     } catch (err) {
-      setFormError(err.response?.data?.message || "Could not log in. Check your credentials and try again.");
+      setFormError(err.response?.data?.message || "Could not log in. Check your credentials.");
     } finally {
       setSubmitting(false);
     }
   };
-  const Login = () => {
+
   return (
     <div className="login-page-wrapper">
-      {/* TaskLedger Branding */}
+      {/* Branding Header */}
       <div className="brand-header" style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1 className="brand-title" style={{ fontSize: '2.5rem', color: '#00d1b2' }}>
           TaskLedger
@@ -63,35 +57,34 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
         <p className="brand-subtitle">Streamline your productivity</p>
       </div>
 
-      {/* Your Existing Login Panel */}
-      <div className="login-panel">
-        <form onSubmit={handleLogin}>
-          {/* Your inputs and login button here */}
-        </form>
-      </div>
+      {/* Login Panel */}
+      <form className="auth-panel" onSubmit={handleSubmit}>
+        <h2 className="panel-title">Login</h2>
+        
+        {formError && <p className="error-msg">{formError}</p>}
+        
+        <div className="form-field">
+          <label>Email</label>
+          <input name="email" type="email" value={formData.email} onChange={handleChange} />
+          {errors.email && <span className="error-text">{errors.email}</span>}
+        </div>
+        
+        <div className="form-field">
+          <label>Password</label>
+          <input name="password" type="password" value={formData.password} onChange={handleChange} />
+          {errors.password && <span className="error-text">{errors.password}</span>}
+        </div>
+        
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? "Logging in..." : "Log in"}
+        </button>
+        
+        <button type="button" onClick={onSwitchToRegister} className="btn-ghost">
+          Need an account? Register
+        </button>
+      </form>
     </div>
   );
-};
-
-  return (
-  <div className="auth-container">
-    <form className="auth-panel" onSubmit={handleSubmit}>
-      <h2 className="panel-title">Login</h2>
-      <div className="form-field">
-        <label>Email</label>
-        <input name="email" type="email" onChange={handleChange} />
-      </div>
-      <div className="form-field">
-        <label>Password</label>
-        <input name="password" type="password" onChange={handleChange} />
-      </div>
-      <button type="submit" className="btn-primary">Log in</button>
-      <button type="button" onClick={onSwitchToRegister} className="btn-ghost">
-        Need an account? Register
-      </button>
-    </form>
-  </div>
-);
 };
 
 export default Login;
