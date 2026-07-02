@@ -52,6 +52,26 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
       setSubmitting(false);
     }
   };
+  const Login = () => {
+  return (
+    <div className="login-page-wrapper">
+      {/* TaskLedger Branding */}
+      <div className="brand-header" style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1 className="brand-title" style={{ fontSize: '2.5rem', color: '#00d1b2' }}>
+          TaskLedger
+        </h1>
+        <p className="brand-subtitle">Streamline your productivity</p>
+      </div>
+
+      {/* Your Existing Login Panel */}
+      <div className="login-panel">
+        <form onSubmit={handleLogin}>
+          {/* Your inputs and login button here */}
+        </form>
+      </div>
+    </div>
+  );
+};
 
   return (
   <div className="auth-container">
