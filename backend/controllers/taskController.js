@@ -31,7 +31,7 @@ const getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ success: false, message: "Invalid ID" });
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, userId: req.user.id });
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
     res.status(200).json({ success: true, data: task });
   } catch (error) {
@@ -48,7 +48,7 @@ const createTask = async (req, res) => {
       status,
       priority,
       dueDate: dueDate || null,
-      userId: req.user ? req.user.id : undefined 
+      userId: req.user.id
     };
     const task = await Task.create(taskData);
     res.status(201).json({ success: true, data: task });
@@ -74,8 +74,8 @@ const updateTask = async (req, res) => {
 
 const deleteTask = async (req, res) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
-    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    const task = await Task.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!task) return res.status(404).json({ success: false, message: "Task not found or unauthorized" });
     res.status(200).json({ success: true, message: "Deleted" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
