@@ -58,7 +58,7 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
       </div>
 
       {/* Login Panel */}
-      <form className="auth-panel" onSubmit={handleSubmit}>
+      <form className="auth-panel" style={{ width: '100%', maxWidth: '400px' }} onSubmit={handleSubmit}>
         <h2 className="panel-title">Login</h2>
         
         {formError && <p className="error-msg">{formError}</p>}
