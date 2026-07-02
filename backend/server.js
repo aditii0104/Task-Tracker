@@ -7,26 +7,33 @@ const taskRoutes = require("./routes/taskRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 const app = express();
+
+// Connect to Database
 connectDB();
 
-const corsOptions = {
-  origin: process.env.CLIENT_URL, // This matches the key in Render
+// CORS Configuration
+// This supports either a single URL or a comma-separated list of allowed origins
+const allowedOrigins = process.env.CLIENT_URL 
+  ? process.env.CLIENT_URL.split(",") 
+  : ["http://localhost:5173"];
+
+app.use(cors({
+  origin: allowedOrigins,
   credentials: true,
-};
-app.use(cors(corsOptions));
+}));
 
-const allowedOrigins = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",") : ["http://localhost:5173"];
-app.use(cors({ origin: allowedOrigins, credentials: true }));
-
+// Middleware to parse JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes are already prefixed here
+// API Routes
 app.use("/api/tasks", taskRoutes);
 app.use("/api/auth", authRoutes);
 
+// Health check endpoint
 app.get("/", (req, res) => res.json({ success: true, message: "API is running" }));
 
+// Error handling middleware
 app.use(notFound);
 app.use(errorHandler);
 
