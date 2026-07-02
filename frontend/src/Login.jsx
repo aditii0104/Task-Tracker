@@ -4,7 +4,7 @@ import api from "./api/taskApi";
 
 const handleLogin = async (data) => {
   // Notice we include /api/auth here
-  const response = await API.post('/api/auth/login', data);
+  const response = await api.post('/api/auth/login', data);
   // ...
 };
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
