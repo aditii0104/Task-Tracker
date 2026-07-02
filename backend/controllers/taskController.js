@@ -4,8 +4,9 @@ const Task = require("../models/Task");
 const getTasks = async (req, res) => {
   try {
     const { status, priority, sortBy, order, search } = req.query;
-    // Logic: Use req.user.id if authenticated, otherwise filter by existence
-    const filter = req.user ? { userId: req.user.id } : { userId: { $exists: false } };
+    
+    // STRICT: Only get tasks for the authenticated user
+    const filter = { userId: req.user.id }; 
     
     if (status && status !== "all") filter.status = status;
     if (priority && priority !== "all") filter.priority = priority;
@@ -58,8 +59,13 @@ const createTask = async (req, res) => {
 
 const updateTask = async (req, res) => {
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
-    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    // Find task by ID AND ensure it belongs to the logged-in user
+    const task = await Task.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id }, 
+      { $set: req.body }, 
+      { new: true }
+    );
+    if (!task) return res.status(404).json({ success: false, message: "Task not found or unauthorized" });
     res.status(200).json({ success: true, data: task });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
