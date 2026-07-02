@@ -9,6 +9,12 @@ const { errorHandler, notFound } = require("./middleware/errorHandler");
 const app = express();
 connectDB();
 
+const corsOptions = {
+  origin: process.env.CLIENT_URL, // This matches the key in Render
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 const allowedOrigins = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",") : ["http://localhost:5173"];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
