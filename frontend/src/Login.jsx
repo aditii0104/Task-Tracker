@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
-import API from '../api';
+import api from "./api/taskApi";
 
 const handleLogin = async (data) => {
   // Notice we include /api/auth here
