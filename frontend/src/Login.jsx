@@ -48,23 +48,23 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
   };
 
   return (
-    <div className="login-page-wrapper">
-      <div className="login-page-wrapper" style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh' 
-      }}>
+    <div className="login-page-wrapper" style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh' 
+    }}>
+      
       {/* Branding Header */}
-      <div className="brand-header" style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h1 className="brand-title" style={{ fontSize: '2.5rem', color: '#00d1b2' }}>
+      <div className="brand-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1 className="brand-title" style={{ fontSize: '3rem', color: '#00d1b2', margin: 0 }}>
           TaskLedger
         </h1>
-        <p className="brand-subtitle">Streamline your productivity</p>
+        <p className="brand-subtitle" style={{ color: '#888' }}>Streamline your productivity</p>
       </div>
 
-      {/* Login Panel */}
+      {/* Login Panel - Explicitly centered */}
       <form className="auth-panel" style={{ width: '100%', maxWidth: '400px' }} onSubmit={handleSubmit}>
         <h2 className="panel-title">Login</h2>
         
@@ -90,9 +90,9 @@ const Login = ({ onSuccess, onSwitchToRegister }) => {
           Need an account? Register
         </button>
       </form>
-    </div>
+    
   </div>
-  );
+);
 };
 
 export default Login;
