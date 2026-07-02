@@ -1,14 +1,15 @@
 import axios from "axios";
 
-// Always use the VITE_API_URL, fallback to localhost if needed for local dev
-const baseURL = import.meta.env.VITE_API_URL || "https://task-tracker-qzrd.onrender.com";
+// If VITE_API_URL is "https://.../api", use it directly. 
+// Otherwise, fall back to the production URL.
+const baseURL = import.meta.env.VITE_API_URL || "https://task-tracker-qzrd.onrender.com/api";
 
 const API = axios.create({
-  baseURL: `${baseURL}/api`, // Ensure /api prefix is here
+  // Use baseURL directly as it should already contain the /api prefix
+  baseURL: baseURL, 
   withCredentials: true,
 });
 
-// Use the same variable name (API) for the interceptor
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -17,7 +18,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Use API (uppercase) consistently in these functions
 export const fetchTasks = async (params = {}) => {
   const response = await API.get("/tasks", { params });
   return response.data;
